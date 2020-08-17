@@ -1,7 +1,10 @@
+using IPChecker.Service;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using System;
+using System.IO;
 
 namespace IPChecker
 {
@@ -9,22 +12,23 @@ namespace IPChecker
     {
         public static void Main(string[] args)
         {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .Build();
+
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
-                .Enrich.FromLogContext()
-                .WriteTo.File(@"/var/log/IPChecker.log")
+                .ReadFrom.Configuration(configuration)
                 .CreateLogger();
 
             try
             {
                 Log.Information("Starting IPChecker");
                 CreateHostBuilder(args).Build().Run();
-                return;
             }
             catch (Exception ex)
             {
-                Log.Error(ex.ToString());
-                return;
+                Log.Fatal(ex, "Could not build or start host");
             }
             finally
             {
@@ -36,6 +40,9 @@ namespace IPChecker
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddHttpClient<IIPService, IPService>();
+
+
                     services.AddHostedService<Worker>();
                 })
                 .UseSerilog();

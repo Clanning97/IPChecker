@@ -1,10 +1,9 @@
+using IPChecker.Service;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,19 +13,19 @@ namespace IPChecker
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
-        private HttpClient http;
-        private SmtpClient smtp;
-        private string currentIP;
+        private readonly IIPService _ipService;
+        private SmtpClient _smtp;
+        private string _currentIP;
 
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogger<Worker> logger, IIPService ipService)
         {
             _logger = logger;
+            _ipService = ipService;
         }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            http = new HttpClient();
-            smtp = new SmtpClient()
+            _smtp = new SmtpClient()
             {
                 Host = "smtp.verizon.net",
                 Port = 587,
@@ -38,30 +37,29 @@ namespace IPChecker
             {
                 try
                 {
-                    currentIP = File.ReadAllText("ip.txt");
+                    _currentIP = File.ReadAllText("ip.txt");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex.ToString());
-                    currentIP = null;
+                    _logger.LogError(ex, "Could not read the saved IP address from file but the program will continue...");
+                    _currentIP = null;
                 }
             }
 
-            return base.StartAsync(cancellationToken);
+            await base.StartAsync(cancellationToken);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (string.IsNullOrEmpty(currentIP))
+            if (string.IsNullOrEmpty(_currentIP))
             {
                 try
                 {
-                    var response = await http.GetFromJsonAsync<IPResponse>("https://api.ipify.org?format=json");
-                    currentIP = response.IP;
+                    _currentIP = await _ipService.GetIP();
 
-                    smtp.Send("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{currentIP}");
+                    _smtp.Send("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{_currentIP}");
 
-                    _logger.LogInformation($"Sent email: {currentIP}");
+                    _logger.LogInformation($"Sent email: {_currentIP}");
                 }
                 catch (Exception ex)
                 {
@@ -74,21 +72,21 @@ namespace IPChecker
             {
                 try
                 {
-                    var response = await http.GetFromJsonAsync<IPResponse>("https://api.ipify.org?format=json");
+                    var responseIP = await _ipService.GetIP();
 
-                    if (currentIP != response.IP)
+                    if (_currentIP != responseIP)
                     {
-                        currentIP = response.IP;
+                        _currentIP = responseIP;
 
-                        smtp.Send("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{currentIP}");
+                        _smtp.Send("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{_currentIP}");
 
-                        _logger.LogInformation($"IP has changed, email sent: {currentIP}");
+                        _logger.LogInformation($"IP has changed, email sent: {_currentIP}");
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex.ToString());
-                    smtp.Send("clanning97@verizon.net", "clanning97@verizon.net", "Error Occured: IPChecker", $"{ex}\n{currentIP}");
+                    _smtp.Send("clanning97@verizon.net", "clanning97@verizon.net", "Error Occured: IPChecker", $"{ex}\n{_currentIP}");
                     return;
                 }
 
@@ -96,14 +94,13 @@ namespace IPChecker
             }
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            http.Dispose();
-            smtp.Dispose();
+            _smtp.Dispose();
 
-            File.WriteAllText("ip.txt", currentIP);
+            File.WriteAllText("ip.txt", _currentIP);
 
-            return base.StopAsync(cancellationToken);
+            await base.StopAsync(cancellationToken);
         }
     }
 }
