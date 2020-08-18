@@ -28,11 +28,7 @@ namespace IPChecker
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "Could not build or start host");
-            }
-            finally
-            {
-                Log.CloseAndFlush();
+                GracefulExit(ex);
             }
         }
 
@@ -47,5 +43,12 @@ namespace IPChecker
                     services.AddHostedService<Worker>();
                 })
                 .UseSerilog();
+
+        public static void GracefulExit(Exception ex)
+        {
+            Log.Fatal(ex, "Could not build or start host");
+            Log.CloseAndFlush();
+            Environment.Exit(1);
+        }
     }
 }
