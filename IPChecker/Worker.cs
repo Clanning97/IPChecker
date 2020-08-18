@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
-using System.Net;
 using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +25,9 @@ namespace IPChecker
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("IPChecker started at: ", DateTimeOffset.Now);
+
+
             if (File.Exists("ip.txt"))
             {
                 try
@@ -35,7 +37,6 @@ namespace IPChecker
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Could not read the saved IP address from file but the program will continue...");
-                    _currentIP = null;
                 }
             }
 
@@ -44,24 +45,6 @@ namespace IPChecker
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (string.IsNullOrEmpty(_currentIP))
-            {
-                try
-                {
-                    _currentIP = await _ipService.GetIP();
-
-                    var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{_currentIP}");
-                    _smtpService.SendEmail(message);
-
-                    _logger.LogInformation($"Sent email: {_currentIP}");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Could not get the current ip");
-                    return;
-                }
-            }
-
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -72,7 +55,7 @@ namespace IPChecker
                     {
                         _currentIP = responseIP;
 
-                        var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{_currentIP}");
+                        var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "The new IP for the house is: ", $"{_currentIP}");
                         _smtpService.SendEmail(message);
 
                         _logger.LogInformation($"IP has changed, email sent: {_currentIP}");
@@ -80,7 +63,7 @@ namespace IPChecker
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Could not get ip");
+                    _logger.LogError(ex, "Could not send or retrieve the ip address");
 
                     var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "Error Occured: IPChecker", $"{ex}\n{_currentIP}");
                     _smtpService.SendEmail(message);
@@ -95,6 +78,8 @@ namespace IPChecker
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             File.WriteAllText("ip.txt", _currentIP);
+
+            _logger.LogInformation("IPChecker stoped at: ", DateTimeOffset.Now);
 
             await base.StopAsync(cancellationToken);
         }
