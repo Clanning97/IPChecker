@@ -25,7 +25,7 @@ namespace IPChecker
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("IPChecker started at: ", DateTimeOffset.Now);
+            _logger.LogInformation("IPChecker started at: {time}", DateTimeOffset.Now);
 
             if (File.Exists("ip.txt"))
             {
@@ -78,7 +78,7 @@ namespace IPChecker
         {
             File.WriteAllText("ip.txt", _currentIP);
 
-            _logger.LogInformation("IPChecker stoped at: ", DateTimeOffset.Now);
+            _logger.LogInformation("IPChecker stoped at: {time}", DateTimeOffset.Now);
 
             await base.StopAsync(cancellationToken);
         }

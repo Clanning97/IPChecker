@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <UserSecretsId>dotnet-IPChecker-77FDC95B-3CF4-43AE-9D10-0601ED265E0F</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
