@@ -2,17 +2,25 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
-		<key>ProcessType</key>
-		<string>Background</string>
-		<key>RunAtLoad</key>
-		<true />
-		<key>KeepAlive</key>
-		<true />
-		<key>Program</key>
-		<string>/Users/family/Applications/IPChecker/IPChecker</string>
-		<key>WorkingDirectory</key>
-		<string>/Users/family/Applications/IPChecker</string>
 		<key>Label</key>
 		<string>house.lanning.IPChecker</string>
+
+		<key>WorkingDirectory</key>
+		<string>/Users/family/Applications/IPChecker</string>
+
+		<key>Program</key>
+		<string>/Users/family/Applications/IPChecker/IPChecker</string>
+
+		<key>ProcessType</key>
+		<string>Background</string>
+
+		<key>RunAtLoad</key>
+		<true />
+
+		<key>KeepAlive</key>
+		<dict>
+			<key>SuccessfulExit</key>
+			<true />
+		</dict>
 	</dict>
 </plist>
