@@ -19,9 +19,12 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/IPChecker/IPChecker.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "-c",
+                "release",
+                "-r",
+                "osx-x64",
+                "-p:PublishSingleFile=true",
+                "${workspaceFolder}/IPChecker/IPChecker.csproj"
             ],
             "problemMatcher": "$msCompile"
         },
