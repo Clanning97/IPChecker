@@ -27,7 +27,6 @@ namespace IPChecker
         {
             _logger.LogInformation("IPChecker started at: ", DateTimeOffset.Now);
 
-
             if (File.Exists("ip.txt"))
             {
                 try
@@ -68,7 +67,7 @@ namespace IPChecker
                     var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "Error Occured: IPChecker", $"{ex}\n{_currentIP}");
                     _smtpService.SendEmail(message);
 
-                    return;
+                    break;
                 }
 
                 await Task.Delay(1000 * 60 * 60);
