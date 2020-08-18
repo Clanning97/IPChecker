@@ -14,25 +14,18 @@ namespace IPChecker
     {
         private readonly ILogger<Worker> _logger;
         private readonly IIPService _ipService;
-        private SmtpClient _smtp;
+        private readonly ISmtpService _smtpService;
         private string _currentIP;
 
-        public Worker(ILogger<Worker> logger, IIPService ipService)
+        public Worker(ILogger<Worker> logger, IIPService ipService, ISmtpService smtpService)
         {
             _logger = logger;
             _ipService = ipService;
+            _smtpService = smtpService;
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            _smtp = new SmtpClient()
-            {
-                Host = "smtp.verizon.net",
-                Port = 587,
-                EnableSsl = true,
-                Credentials = new NetworkCredential("clanning97@verizon.net", "mcybviqbcenppcsh")
-            };
-
             if (File.Exists("ip.txt"))
             {
                 try
@@ -57,13 +50,14 @@ namespace IPChecker
                 {
                     _currentIP = await _ipService.GetIP();
 
-                    _smtp.Send("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{_currentIP}");
+                    var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{_currentIP}");
+                    _smtpService.SendEmail(message);
 
                     _logger.LogInformation($"Sent email: {_currentIP}");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex.ToString());
+                    _logger.LogError(ex, "Could not get the current ip");
                     return;
                 }
             }
@@ -78,15 +72,19 @@ namespace IPChecker
                     {
                         _currentIP = responseIP;
 
-                        _smtp.Send("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{_currentIP}");
+                        var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "IP Change", $"{_currentIP}");
+                        _smtpService.SendEmail(message);
 
                         _logger.LogInformation($"IP has changed, email sent: {_currentIP}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex.ToString());
-                    _smtp.Send("clanning97@verizon.net", "clanning97@verizon.net", "Error Occured: IPChecker", $"{ex}\n{_currentIP}");
+                    _logger.LogError(ex, "Could not get ip");
+
+                    var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "Error Occured: IPChecker", $"{ex}\n{_currentIP}");
+                    _smtpService.SendEmail(message);
+
                     return;
                 }
 
@@ -96,8 +94,6 @@ namespace IPChecker
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            _smtp.Dispose();
-
             File.WriteAllText("ip.txt", _currentIP);
 
             await base.StopAsync(cancellationToken);

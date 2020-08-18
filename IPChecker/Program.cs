@@ -42,6 +42,7 @@ namespace IPChecker
                 {
                     services.AddHttpClient<IIPService, IPService>();
 
+                    services.AddTransient<ISmtpService, SmtpService>();
 
                     services.AddHostedService<Worker>();
                 })
