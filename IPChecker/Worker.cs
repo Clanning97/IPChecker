@@ -54,7 +54,7 @@ namespace IPChecker
                     {
                         _currentIP = responseIP;
 
-                        var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "The new IP for the house is: ", $"{_currentIP}");
+                        var message = new MailMessage("", "", "The new IP for the house is: ", $"{_currentIP}");
                         _smtpService.SendEmail(message);
 
                         _logger.LogInformation($"IP has changed, email sent: {_currentIP}");
@@ -64,7 +64,7 @@ namespace IPChecker
                 {
                     _logger.LogError(ex, "Could not send or retrieve the ip address");
 
-                    var message = new MailMessage("clanning97@verizon.net", "clanning97@verizon.net", "Error Occured: IPChecker", $"{ex}\n{_currentIP}");
+                    var message = new MailMessage("", "", "Error Occured: IPChecker", $"{ex}\n{_currentIP}");
                     _smtpService.SendEmail(message);
 
                     break;

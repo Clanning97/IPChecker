@@ -6,10 +6,10 @@
 		<string>house.lanning.IPChecker</string>
 
 		<key>WorkingDirectory</key>
-		<string>/Users/family/Applications/IPChecker</string>
+		<string></string>
 
 		<key>Program</key>
-		<string>/Users/family/Applications/IPChecker/IPChecker</string>
+		<string></string>
 
 		<key>ProcessType</key>
 		<string>Background</string>
